@@ -1,54 +1,44 @@
-import React, { Component } from 'react';
+import { useState } from 'react';
 import '../../styles.css';
 
-class SearchFrom extends Component {
-  state = {
-    query: '',
+export default function SearchFrom({ onSearch }) {
+  const [query, setQuery] = useState('');
+
+  const handleSearchInput = e => {
+    const { value } = e.target;
+    setQuery(value);
   };
 
-  handleSearchInput = e => {
-    const { name, value } = e.currentTarget;
-
-    this.setState({
-      [name]: value,
-    });
-  };
-
-  handleSubmit = e => {
+  const handleSubmit = e => {
     e.preventDefault();
 
-    if (!this.state.query) return;
+    if (!query) return;
 
-    this.props.onSearch(this.state.query);
+    onSearch(query);
 
-    this.resetForm();
+    resetForm();
   };
 
-  resetForm = () =>
-    this.setState({
-      query: '',
-    });
+  const resetForm = () => {
+    setQuery('');
+  };
 
-  render() {
-    return (
-      <form className="SearchForm" onSubmit={this.handleSubmit}>
-        <button className="SearchForm-button" type="submit">
-          <span className="SearchForm-button-label">Search</span>
-        </button>
+  return (
+    <form className="SearchForm" onSubmit={handleSubmit}>
+      <button className="SearchForm-button" type="submit">
+        <span className="SearchForm-button-label">Search</span>
+      </button>
 
-        <input
-          className="SearchForm-input"
-          type="text"
-          name="query"
-          value={this.state.query}
-          onChange={this.handleSearchInput}
-          autoComplete="off"
-          autoFocus
-          placeholder="Search images and photos"
-        />
-      </form>
-    );
-  }
+      <input
+        className="SearchForm-input"
+        type="text"
+        name="query"
+        value={query}
+        onChange={handleSearchInput}
+        autoComplete="off"
+        autoFocus
+        placeholder="Search images and photos"
+      />
+    </form>
+  );
 }
-
-export default SearchFrom;
