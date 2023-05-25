@@ -15,12 +15,51 @@ const App = () => {
   const [showModal, setModal] = useState(false);
   const [largeImage, setlargeImage] = useState('');
   const [error, setError] = useState(null);
-  // const [selectedImage, setSelectedImage] = useState(null);
+
+  const handleGalleryItem = fullImageUrl => {
+    setlargeImage(fullImageUrl);
+    setModal(true);
+  };
+
+  const handleLoadMore = () => {
+    setPage(prevPage => prevPage + 1);
+  };
+
+  const scrollOnLoadButton = () => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'smooth',
+    });
+  };
 
   useEffect(() => {
+    const getImages = async () => {
+      setLoading(true);
+      try {
+        const { hits } = await fetchImages(searchQuery, currentPage, 12);
+
+        if (hits.length === 0) {
+          throw new Error('No images found. Please enter a different query.');
+        }
+
+        setImages(prev => [...prev, ...hits]);
+        setError(null);
+
+        if (currentPage !== 1) {
+          scrollOnLoadButton();
+        }
+      } catch (error) {
+        console.log('Something went wrong with fetching images:', error);
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (!searchQuery) return;
+
     getImages();
-  }, [searchQuery]);
+  }, [searchQuery, currentPage]);
 
   const onChangeQuery = query => {
     setImages([]);
@@ -29,54 +68,11 @@ const App = () => {
     setError(null);
   };
 
-  const getImages = async () => {
-    setLoading(true);
-    try {
-      const { hits } = await fetchImages(searchQuery, currentPage, 12);
-
-      if (hits.length === 0) {
-        throw new Error('No images found. Please enter a different query.');
-      }
-
-      setImages(prev => [...prev, ...hits]);
-      setPage(prevPage => prevPage + 1);
-      setError(null);
-
-      if (currentPage !== 1) {
-        scrollOnLoadButton();
-      }
-    } catch (error) {
-      console.log('Something went wrong with fetching images:', error);
-      setError({ error });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGalleryItem = fullImageUrl => {
-    setlargeImage(fullImageUrl);
-    setModal(true);
-  };
-
-  const incrementPage = () => {
-    setPage(prevPage => prevPage + 1);
-    getImages();
-  };
-
-  // const openModal = selectedImage => {
-  //   setSelectedImage(selectedImage);
-  //   setModal(true);
-  // };
   const closeModal = () => {
     setModal(false);
     setlargeImage('');
   };
-  const scrollOnLoadButton = () => {
-    window.scrollTo({
-      top: document.documentElement.scrollHeight,
-      behavior: 'smooth',
-    });
-  };
+
   const needToShowLoadMore = images.length > 0 && images.length >= 12;
 
   return (
@@ -91,7 +87,7 @@ const App = () => {
 
       <ImageGallery images={images} onImageClick={handleGalleryItem} />
 
-      {needToShowLoadMore && <Button onClick={incrementPage} />}
+      {needToShowLoadMore && <Button onClick={handleLoadMore} />}
       {showModal && <Modal largeImageURL={largeImage} onClose={closeModal} />}
 
       {isLoading && <Loader />}
