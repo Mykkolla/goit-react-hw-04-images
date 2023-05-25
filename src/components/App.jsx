@@ -67,7 +67,6 @@ const App = () => {
   //   setSelectedImage(selectedImage);
   //   setModal(true);
   // };
-
   const closeModal = () => {
     setModal(false);
     setlargeImage('');
