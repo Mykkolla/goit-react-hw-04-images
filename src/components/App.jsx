@@ -15,6 +15,7 @@ const App = () => {
   const [showModal, setModal] = useState(false);
   const [largeImage, setlargeImage] = useState('');
   const [error, setError] = useState(null);
+  const [totalImg, setTotalIng] = useState(null);
 
   const handleGalleryItem = fullImageUrl => {
     setlargeImage(fullImageUrl);
@@ -25,29 +26,32 @@ const App = () => {
     setPage(prevPage => prevPage + 1);
   };
 
-  const scrollOnLoadButton = () => {
-    window.scrollTo({
-      top: document.documentElement.scrollHeight,
-      behavior: 'smooth',
-    });
-  };
-
   useEffect(() => {
     const getImages = async () => {
       setLoading(true);
       try {
-        const { hits } = await fetchImages(searchQuery, currentPage, 12);
-
+        const { hits, totalHits } = await fetchImages(
+          searchQuery,
+          currentPage,
+          12
+        );
+        console.log(totalHits);
         if (hits.length === 0) {
           throw new Error('No images found. Please enter a different query.');
         }
 
-        setImages(prev => [...prev, ...hits]);
-        setError(null);
+        const transformedHits = hits.map(
+          ({ id, tags, webformatURL, largeImageURL }) => ({
+            id,
+            tags,
+            webformatUrl: webformatURL,
+            largeImgUrl: largeImageURL,
+          })
+        );
 
-        if (currentPage !== 1) {
-          scrollOnLoadButton();
-        }
+        setImages(prev => [...prev, ...transformedHits]);
+        setError(null);
+        setTotalIng(totalHits);
       } catch (error) {
         console.log('Something went wrong with fetching images:', error);
         setError(error);
@@ -73,8 +77,7 @@ const App = () => {
     setlargeImage('');
   };
 
-  const needToShowLoadMore = images.length > 0 && images.length >= 12;
-
+  const needToShowLoadMore = images.length > 0 && images.length !== totalImg;
   return (
     <div className="App">
       <Searchbar onSearch={onChangeQuery} />
@@ -85,8 +88,15 @@ const App = () => {
         </div>
       )}
 
-      <ImageGallery images={images} onImageClick={handleGalleryItem} />
-
+      <ImageGallery
+        images={images.map(({ id, tags, webformatUrl, largeImgUrl }) => ({
+          id,
+          tags,
+          webformatUrl,
+          largeImgUrl,
+        }))}
+        onImageClick={handleGalleryItem}
+      />
       {needToShowLoadMore && <Button onClick={handleLoadMore} />}
       {showModal && <Modal largeImageURL={largeImage} onClose={closeModal} />}
 
